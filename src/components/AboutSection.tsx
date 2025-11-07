@@ -11,7 +11,7 @@ export const AboutSection = () => {
     {
       icon: Shield,
       title: "Adversarial Resistance",
-      description: "Models hardened against adversarial attacks, ensuring reliable detection even with sophisticated manipulation attempts."
+      description: "Models hardened against adversarial attacks (FGSM, PGD, C&W, DeepFool), ensuring reliable detection even with sophisticated perturbations."
     },
     {
       icon: Cpu,

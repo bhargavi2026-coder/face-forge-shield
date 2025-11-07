@@ -4,18 +4,29 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { toast } from "sonner";
 import { DetectionResults } from "./DetectionResults";
+import { AdversarialAttacks } from "./AdversarialAttacks";
+import { ComparisonResults } from "./ComparisonResults";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 export const UploadSection = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [attackedImage, setAttackedImage] = useState<string | null>(null);
+  const [attackedResults, setAttackedResults] = useState<any>(null);
+  const [attackType, setAttackType] = useState<string>("");
+  const [epsilon, setEpsilon] = useState<number>(0);
+  const [showAttackOptions, setShowAttackOptions] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       setResults(null);
+      setAttackedImage(null);
+      setAttackedResults(null);
+      setShowAttackOptions(false);
       
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -52,8 +63,36 @@ export const UploadSection = () => {
       
       setResults(mockResults);
       setIsAnalyzing(false);
+      setShowAttackOptions(true);
       toast.success("Analysis complete");
     }, 3000);
+  };
+
+  const handleAttackComplete = (attacked: string, type: string, eps: number) => {
+    setAttackedImage(attacked);
+    setAttackType(type);
+    setEpsilon(eps);
+    
+    // Analyze the attacked image
+    toast.info("Analyzing attacked image...");
+    setIsAnalyzing(true);
+    
+    setTimeout(() => {
+      const mockAttackedResults = {
+        confidence: Math.max(40, results.confidence - Math.random() * 30),
+        isFake: results.isFake,
+        manipulationType: results.manipulationType,
+        analysisTime: (Math.random() * 2 + 1).toFixed(2),
+        features: results.features.map((f: any) => ({
+          ...f,
+          score: Math.max(30, f.score - Math.random() * 25)
+        }))
+      };
+      
+      setAttackedResults(mockAttackedResults);
+      setIsAnalyzing(false);
+      toast.success("Attacked image analysis complete");
+    }, 2500);
   };
 
   return (
@@ -121,27 +160,37 @@ export const UploadSection = () => {
             </div>
           </Card>
 
-          <div>
-            {preview && (
-              <Card className="p-4 border-primary/20 shadow-card mb-4">
+          <div className="space-y-4">
+            {preview && file?.type.startsWith("image/") && (
+              <Card className="p-4 border-primary/20 shadow-card">
                 <h3 className="font-semibold mb-3">Preview</h3>
-                {file?.type.startsWith("image/") ? (
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-full rounded-lg"
-                  />
-                ) : (
-                  <video
-                    src={preview}
-                    controls
-                    className="w-full rounded-lg"
-                  />
-                )}
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="w-full rounded-lg"
+                />
               </Card>
             )}
 
-            {results && <DetectionResults results={results} />}
+            {results && !attackedResults && <DetectionResults results={results} />}
+
+            {results && showAttackOptions && !attackedImage && (
+              <AdversarialAttacks
+                originalImage={preview!}
+                onAttackComplete={handleAttackComplete}
+              />
+            )}
+
+            {attackedResults && preview && attackedImage && (
+              <ComparisonResults
+                originalResults={results}
+                attackedResults={attackedResults}
+                attackType={attackType}
+                epsilon={epsilon}
+                originalImage={preview}
+                attackedImage={attackedImage}
+              />
+            )}
           </div>
         </div>
       </div>
