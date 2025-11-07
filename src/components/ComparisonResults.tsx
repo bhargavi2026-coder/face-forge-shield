@@ -2,6 +2,7 @@ import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { Shield, AlertTriangle, TrendingDown, TrendingUp } from "lucide-react";
+import { PerturbationHeatmap } from "./PerturbationHeatmap";
 
 interface ComparisonResultsProps {
   originalResults: any;
@@ -44,6 +45,13 @@ export const ComparisonResults = ({
             </p>
             <img src={attackedImage} alt="Attacked" className="w-full rounded-lg border border-warning" />
           </div>
+        </div>
+
+        <div className="mb-6">
+          <PerturbationHeatmap 
+            originalImage={originalImage}
+            attackedImage={attackedImage}
+          />
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-6">
