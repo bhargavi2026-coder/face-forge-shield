@@ -8,8 +8,9 @@ interface DetectionResultsProps {
     confidence: number;
     isFake: boolean;
     manipulationType: string;
-    analysisTime: string;
-    features: Array<{ name: string; score: number }>;
+    analysisTime: number;
+    features: Array<{ name: string; score: number; description?: string }>;
+    reasoning?: string;
   };
 }
 
@@ -18,6 +19,12 @@ export const DetectionResults = ({ results }: DetectionResultsProps) => {
     if (confidence >= 80) return "text-success";
     if (confidence >= 60) return "text-warning";
     return "text-destructive";
+  };
+  
+  const getFeatureStatus = (score: number) => {
+    if (score <= 30) return { color: "text-success", label: "Natural" };
+    if (score <= 70) return { color: "text-warning", label: "Suspicious" };
+    return { color: "text-destructive", label: "Fake" };
   };
 
   return (
@@ -56,29 +63,44 @@ export const DetectionResults = ({ results }: DetectionResultsProps) => {
             </div>
             <p className="font-semibold">{results.manipulationType}</p>
           </div>
-          <div className="p-4 bg-secondary rounded-lg">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Analysis Time</span>
-            </div>
-            <p className="font-semibold">{results.analysisTime}s</p>
+          <div className="text-center p-4 bg-secondary rounded-lg">
+            <p className="text-xs text-muted-foreground mb-1">Analysis Time</p>
+            <p className="text-xl font-bold">{(results.analysisTime / 1000).toFixed(2)}s</p>
           </div>
         </div>
 
         <div>
           <h4 className="font-semibold mb-3 text-sm">Feature Analysis</h4>
           <div className="space-y-3">
-            {results.features.map((feature, index) => (
-              <div key={index}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">{feature.name}</span>
-                  <span className="text-xs font-medium">{feature.score.toFixed(1)}%</span>
+            {results.features?.map((feature: any, index: number) => {
+              const status = getFeatureStatus(feature.score);
+              return (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">{feature.name}</span>
+                    <span className={`text-sm font-bold ${status.color}`}>
+                      {feature.score.toFixed(0)}/100 - {status.label}
+                    </span>
+                  </div>
+                  <Progress value={feature.score} className="h-2" />
+                  {feature.description && (
+                    <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
+                  )}
                 </div>
-                <Progress value={feature.score} className="h-1" />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
+
+        {results.reasoning && (
+          <div className="p-4 bg-muted rounded-lg border border-border">
+            <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Analysis Reasoning
+            </h4>
+            <p className="text-sm text-muted-foreground">{results.reasoning}</p>
+          </div>
+        )}
 
         <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
           <p className="text-xs text-muted-foreground">

@@ -27,36 +27,40 @@ serve(async (req) => {
 
     console.log('Starting deepfake detection analysis...');
 
-    // Enhanced system prompt for forensic analysis
-    const systemPrompt = `You are an expert forensic analyst specializing in deepfake detection using the ForensicFace++ methodology. 
+    // Enhanced system prompt for forensic analysis with ForensicFace++ methodology
+    const systemPrompt = `You are an expert forensic analyst specializing in deepfake detection. You must be HIGHLY CRITICAL and look for manipulation artifacts.
 
-Analyze the provided image for signs of manipulation using these forensic techniques:
+**CRITICAL SCORING RULES:**
+- Feature scores: 0-30 = AUTHENTIC (natural), 31-70 = SUSPICIOUS (possible fake), 71-100 = FAKE (clear manipulation)
+- Be STRICT: Real photos should score 0-20 on all features
+- Any GAN-based, face swap, or deepfake content should score 50+
 
-1. **Facial Inconsistencies**: Check for unnatural facial features, asymmetry, blending artifacts around face boundaries
-2. **Eye Analysis**: Examine iris reflections, pupil consistency, unnatural eye movements or gaze direction
-3. **Texture Analysis**: Look for pixel-level artifacts, noise patterns, compression artifacts that differ across regions
-4. **Lighting & Shadows**: Verify consistency of lighting direction, shadow placement, and highlights
-5. **Edge Detection**: Check for blurred or inconsistent edges around facial features
-6. **Color Analysis**: Examine skin tone consistency, color gradients, unnatural color patches
-7. **Temporal Artifacts**: ${isVideo ? 'Check for frame-to-frame inconsistencies, jitter, or unnatural transitions' : 'Not applicable for single images'}
+Analyze using ForensicFace++ methodology:
 
-Provide your analysis in this EXACT JSON format:
+1. **Facial Boundaries**: Unnatural edges, blending artifacts, mismatched skin tones at face boundaries
+2. **Eye Artifacts**: Asymmetric reflections, inconsistent pupils, unnatural gaze, missing eye details
+3. **Texture Consistency**: Overly smooth skin, repetitive patterns, mismatched grain/noise, unnatural pores
+4. **Lighting Analysis**: Inconsistent shadows, impossible light directions, mismatched highlights
+5. **Color Patterns**: Unnatural skin tones, color bleeding, inconsistent color grading
+6. **Deepfake Indicators**: ${isVideo ? 'Frame jitter, temporal inconsistencies, audio-visual sync issues' : 'GAN artifacts, warping, frequency domain anomalies'}
+
+Return EXACT JSON:
 {
-  "isFake": true/false,
-  "confidence": 0-100,
-  "manipulationType": "GAN-based" | "Face Swap" | "Expression Transfer" | "Audio Sync" | "Authentic",
-  "analysisTime": time in ms,
+  "isFake": true/false (true if ANY suspicious indicators found),
+  "confidence": 0-100 (how certain you are),
+  "manipulationType": "GAN-based" | "Face Swap" | "Expression Transfer" | "NeuralTextures" | "Authentic",
+  "analysisTime": 0,
   "features": [
-    {"name": "Facial Boundaries", "score": 0-100, "description": "brief analysis"},
-    {"name": "Eye Artifacts", "score": 0-100, "description": "brief analysis"},
-    {"name": "Texture Consistency", "score": 0-100, "description": "brief analysis"},
-    {"name": "Lighting Analysis", "score": 0-100, "description": "brief analysis"},
-    {"name": "Color Patterns", "score": 0-100, "description": "brief analysis"}
+    {"name": "Facial Boundaries", "score": 0-100, "description": "specific findings"},
+    {"name": "Eye Artifacts", "score": 0-100, "description": "specific findings"},
+    {"name": "Texture Consistency", "score": 0-100, "description": "specific findings"},
+    {"name": "Lighting Analysis", "score": 0-100, "description": "specific findings"},
+    {"name": "Color Patterns", "score": 0-100, "description": "specific findings"}
   ],
-  "reasoning": "detailed explanation of detection decision"
+  "reasoning": "explain your decision with specific evidence"
 }
 
-Be thorough and accurate. Higher feature scores indicate more suspicious artifacts (higher likelihood of manipulation).`;
+**BE DECISIVE**: If you see manipulation signs, mark it as fake!`;
 
     const startTime = Date.now();
 
@@ -67,7 +71,7 @@ Be thorough and accurate. Higher feature scores indicate more suspicious artifac
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           {
